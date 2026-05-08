@@ -58,7 +58,9 @@ public class ClientGUI {
             case TEXT: case EDIT: case DELETE:
                 if(m.getType()==Message.Type.TEXT && m.getSender().equals(username) && sentIds.contains(m.getId())) return;
                 addOrUpdate(m); break;
-            case PRIVATE: addOrUpdate(m); break;
+            case PRIVATE: 
+                if(m.getSender().equals(username) && sentIds.contains(m.getId())) return;
+                addOrUpdate(m); break;
             case TYPING:
                 if(!m.getSender().equals(username)){
                     typingLabel.setText(m.getSender()+" is typing...");
@@ -84,7 +86,7 @@ public class ClientGUI {
         if(m.getType()==Message.Type.EDIT||m.getType()==Message.Type.DELETE){
             BubbleRow b=bubbles.get(m.getId()); if(b!=null){b.update(m);return;}
         }
-        if(bubbles.containsKey(m.getId())&&m.getType()==Message.Type.TEXT) return;
+        if(bubbles.containsKey(m.getId())&&(m.getType()==Message.Type.TEXT||m.getType()==Message.Type.PRIVATE)) return;
         BubbleRow row=new BubbleRow(m); bubbles.put(m.getId(),row);
         msgBox.add(row); msgBox.revalidate(); msgBox.repaint();
         SwingUtilities.invokeLater(()->{JScrollBar v=chatScroll.getVerticalScrollBar();v.setValue(v.getMaximum());});
@@ -226,7 +228,7 @@ public class ClientGUI {
     void doSend() {
         String t=input.getText().trim(); if(t.isEmpty())return;
         Message m = (privateTarget!=null) ? Message.priv(username,privateTarget,t) : Message.text(username,t);
-        if(m.getType()==Message.Type.TEXT) sentIds.add(m.getId());
+        if(m.getType()==Message.Type.TEXT || m.getType()==Message.Type.PRIVATE) sentIds.add(m.getId());
         addOrUpdate(m); send(m);
         input.setText(""); privateTarget=null; privLabel.setVisible(false); usersList.clearSelection();
         input.requestFocusInWindow();
